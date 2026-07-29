@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teranga Express | Livraison rapide</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1E3A8A", // Deep Blue
+            accent: "#F97316", // Orange
+            background: "#F8FAFC", // Light grayish white
+            surface: "#FFFFFF", // White card background
+            textMain: "#0F172A", // Dark blue/slate for text
+            textMuted: "#64748B" // Gray for muted text
+          },
+          fontFamily: {
+            title: ['"Plus Jakarta Sans"', '"Outfit"', 'sans-serif'],
+            dramatic: ['"Cormorant Garamond"', 'serif'],
+            data: ['"IBM Plex Mono"', 'monospace'],
+            body: ['"Outfit"', 'sans-serif'],
+          }
+        },
+      }
+    }
+  </script>
+
+  <!-- Custom CSS -->
+  <style>
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: "Outfit", sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 9999;
+      opacity: 0.04; filter: url(#noiseFilter);
+    }
+    
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    }
+
+    .magnetic-btn {
+      position: relative; overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .magnetic-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+    .magnetic-btn > .bg-layer {
+      position: absolute; inset: 0; background-color: #000000; opacity: 0;
+      transition: opacity 0.3s; pointer-events: none;
+    }
+    .magnetic-btn:hover > .bg-layer { opacity: 0.05; }
+    
+    .interactive-link {
+      display: inline-block; transition: transform 0.3s;
+    }
+    .interactive-link:hover { transform: translateY(-2px); color: #1E3A8A; }
+    
+    /* Animations */
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+    @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+    @keyframes ping-slow { 0% { transform: scale(1); opacity: 1; } 75%, 100% { transform: scale(2); opacity: 0; } }
+    
+    .animate-spin-slow { animation: spin-slow 12s linear infinite; }
+    .animate-spin-reverse { animation: spin-reverse 8s linear infinite; }
+    .animate-ping-slow { animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite; }
+    
+    /* Map radar sweep */
+    .radar-sweep {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 100%; height: 100%;
+      transform-origin: 0 0;
+      background: conic-gradient(from 0deg, transparent 70%, rgba(16, 185, 129, 0.4) 100%);
+      animation: spin-slow 4s linear infinite;
+      border-radius: 50%;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #F8FAFC; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #1E3A8A; }
+  </style>
+
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- Noise SVG -->
+  <svg style="display: none;">
+    <filter id="noiseFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+  </svg>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Icons
+    const ArrowRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+    const Activity = ({size, className}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
+    const Cpu = ({size, className}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>;
+    const ShieldCheck = ({size, className}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>;
+    const MapPin = ({size, className}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>;
+    const XIcon = ({size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const Navbar = ({ onOpenModal }) => {
+      const navRef = useRef(null);
+      useEffect(() => {
+        const ctx = gsap.context(() => {
+          ScrollTrigger.create({
+            start: 'top -50',
+            end: 99999,
+            toggleClass: { className: 'glass-panel shadow-sm', targets: navRef.current },
+            onToggle: self => {
+              if(!self.isActive) gsap.set(navRef.current, { background: 'transparent', borderColor: 'transparent', boxShadow: 'none' });
+            }
+          });
+        }, navRef);
+        return () => ctx.revert();
+      }, []);
+
+      return (
+        <nav ref={navRef} className="fixed top-6 left-1/2 -translate-x-1/2 z-40 px-6 py-3 rounded-full border border-transparent transition-all duration-300 flex items-center justify-between gap-12 w-[90%] max-w-5xl">
+          <div className="font-title font-bold text-xl md:text-2xl tracking-tight text-primary">TERANGA <span className="text-accent font-light">EXPRESS</span></div>
+          <div className="hidden md:flex items-center gap-8 font-title text-sm font-medium text-textMuted">
+            <a href="#features" className="interactive-link hover:text-primary">Technologies</a>
+            <a href="#map" className="interactive-link hover:text-primary">Couverture</a>
+            <a href="#protocol" className="interactive-link hover:text-primary">Protocole</a>
+          </div>
+          <button onClick={onOpenModal} className="magnetic-btn bg-accent text-white px-5 py-2 md:px-6 md:py-2.5 rounded-full font-title text-sm font-bold flex items-center gap-2 whitespace-nowrap">
+            <span>Demander un devis</span><div className="bg-layer"></div>
+          </button>
+        </nav>
+      );
+    };
+
+    const QuoteModal = ({ isOpen, onClose }) => {
+      const modalRef = useRef(null);
+      const bgRef = useRef(null);
+
+      useEffect(() => {
+        if (isOpen) {
+          document.body.style.overflow = 'hidden';
+          gsap.to(bgRef.current, { opacity: 1, duration: 0.3, display: 'flex' });
+          gsap.fromTo(modalRef.current, 
+            { y: 50, opacity: 0, scale: 0.95 },
+            { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out', delay: 0.1 }
+          );
+        } else {
+          document.body.style.overflow = 'auto';
+          gsap.to(modalRef.current, { y: 20, opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.in' });
+          gsap.to(bgRef.current, { opacity: 0, duration: 0.3, display: 'none', delay: 0.2 });
+        }
+      }, [isOpen]);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        alert("Demande envoyée avec succès à Teranga Express ! Notre algorithme calcule la meilleure route.");
+        onClose();
+      };
+
+      return (
+        <div ref={bgRef} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/20 backdrop-blur-md hidden opacity-0">
+          <div ref={modalRef} className="bg-surface border border-black/5 rounded-[2rem] w-full max-w-xl p-8 md:p-10 relative shadow-2xl">
+            <button type="button" onClick={onClose} className="absolute top-6 right-6 text-textMuted hover:text-accent transition-colors">
+              <XIcon size={24} />
+            </button>
+            <h2 className="font-title font-bold text-3xl mb-2 text-primary">Demander un devis</h2>
+            <p className="font-body text-textMuted mb-8 text-sm">Initialisez une requête logistique. Nos vecteurs sont prêts.</p>
+            
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5 font-body">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-textMuted uppercase tracking-wider font-semibold">Lieu d'enlèvement</label>
+                  <input required type="text" placeholder="Ex: Point E, Dakar" className="bg-background border border-black/5 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent text-textMain w-full" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-textMuted uppercase tracking-wider font-semibold">Lieu de livraison</label>
+                  <input required type="text" placeholder="Ex: Almadies, Dakar" className="bg-background border border-black/5 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent text-textMain w-full" />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-textMuted uppercase tracking-wider font-semibold">Nom complet</label>
+                <input required type="text" placeholder="Ex: Mamadou Diop" className="bg-background border border-black/5 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent text-textMain w-full" />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-textMuted uppercase tracking-wider font-semibold">Numéro de téléphone</label>
+                  <input required type="tel" placeholder="+221 77 000 00 00" className="bg-background border border-black/5 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent text-textMain w-full" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-textMuted uppercase tracking-wider font-semibold">Budget estimé (FCFA)</label>
+                  <input required type="number" placeholder="Ex: 3000" className="bg-background border border-black/5 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent text-textMain w-full" />
+                </div>
+              </div>
+
+              <button type="submit" className="magnetic-btn bg-accent text-white mt-4 w-full py-4 rounded-xl font-title text-base font-bold flex justify-center items-center gap-2 shadow-lg shadow-accent/30">
+                <span>Calculer l'itinéraire & Envoyer</span><ArrowRight />
+                <div className="bg-layer"></div>
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    const Hero = ({ onOpenModal }) => {
+      const containerRef = useRef(null);
+      const textRefs = useRef([]);
+      useEffect(() => {
+        const ctx = gsap.context(() => {
+          gsap.from(textRefs.current, { y: 60, opacity: 0, duration: 1.2, stagger: 0.1, ease: 'power3.out', delay: 0.2 });
+        }, containerRef);
+        return () => ctx.revert();
+      }, []);
+
+      return (
+        <section ref={containerRef} className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col-reverse md:flex-row bg-background pt-20 md:pt-0">
+          
+          {/* Colonne Texte (Gauche) */}
+          <div className="relative z-10 w-full md:w-[55%] flex flex-col justify-center px-6 md:pl-16 lg:pl-24 pb-24 pt-12 md:py-32">
+            <div className="max-w-xl">
+              <h1 className="flex flex-col gap-2">
+                <span ref={el => textRefs.current[0] = el} className="font-title font-bold text-3xl md:text-5xl tracking-tight text-primary">
+                  La logistique n'est plus une attente.
+                </span>
+                <span ref={el => textRefs.current[1] = el} className="font-dramatic italic text-6xl md:text-[7rem] lg:text-[8rem] leading-none text-accent drop-shadow-sm">
+                  C'est un flux.
+                </span>
+              </h1>
+              <p ref={el => textRefs.current[2] = el} className="mt-8 text-lg md:text-xl font-body text-textMuted max-w-lg leading-relaxed">
+                Teranga Express orchestre vos livraisons avec une précision millimétrique. De l'expéditeur au destinataire, sans friction, sans délai.
+              </p>
+              <div ref={el => textRefs.current[3] = el} className="mt-10 flex flex-col sm:flex-row gap-4">
+                <button onClick={onOpenModal} className="magnetic-btn bg-primary text-white px-8 py-4 rounded-full font-title text-base font-bold flex items-center justify-center gap-3 w-full sm:w-auto shadow-lg shadow-primary/20">
+                  <span>Demander un devis immédiat</span><ArrowRight />
+                  <div className="bg-layer"></div>
+                </button>
+              </div>
+              
+              <div ref={el => textRefs.current[4] = el} className="hidden md:flex bg-white border border-black/5 rounded-3xl p-6 flex-col gap-4 w-72 mt-12 shadow-xl shadow-primary/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-accent animate-pulse"></div>
+                  <div className="font-data text-xs text-textMuted font-bold tracking-widest">RÉSEAU ACTIF</div>
+                </div>
+                <div className="text-4xl font-title font-bold text-primary">120 min</div>
+                <div className="text-sm font-body text-textMuted">Temps de transit maximal garanti sur tout le réseau dakarois.</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Colonne Image (Droite) */}
+          <div className="relative w-full md:w-[45%] h-[60vh] md:h-auto overflow-hidden">
+            <img src="./hero-bg.png" alt="Livraison Express Dakar" className="w-full h-full object-cover object-[center_30%] md:object-center md:rounded-bl-[4rem]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80 md:hidden"></div>
+          </div>
+
+        </section>
+      );
+    };
+
+    const Features = () => (
+      <section id="features" className="py-32 px-6 md:px-16 bg-background relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col items-center mb-20 text-center">
+            <h2 className="font-title font-bold text-4xl md:text-5xl mb-4 text-primary">Ingénierie du Mouvement</h2>
+            <p className="text-textMuted max-w-xl font-body">Une architecture logicielle conçue pour éradiquer les retards physiques.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Carte 1 */}
+            <div className="glass-panel rounded-[2rem] p-8 flex flex-col h-[450px] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-accent/10 transition-colors duration-500"></div>
+              <h3 className="font-title font-semibold text-2xl mb-3 relative z-10 text-primary">I.A. Avancée</h3>
+              <p className="font-body text-textMuted text-sm mb-12 relative z-10 max-w-[200px]">Algorithmes de routage prédictif anticipant le trafic en temps réel.</p>
+              <div className="flex-1 relative flex items-center justify-center">
+                <div className="absolute w-[220px] h-[220px] rounded-full border border-black/5 flex items-center justify-center animate-spin-slow">
+                  <div className="w-2 h-2 bg-primary rounded-full absolute -top-1 shadow-[0_0_10px_rgba(30,58,138,0.5)]"></div>
+                </div>
+                <div className="absolute w-[150px] h-[150px] rounded-full border border-accent/20 flex items-center justify-center animate-spin-reverse">
+                  <div className="w-1.5 h-1.5 bg-accent rounded-full absolute -bottom-1 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                </div>
+                <Activity size={48} className="text-primary relative z-10" />
+              </div>
+            </div>
+
+            {/* Carte 2 */}
+            <div className="glass-panel rounded-[2rem] p-8 flex flex-col h-[450px] relative overflow-hidden group">
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 group-hover:bg-primary/10 transition-colors duration-500"></div>
+              <h3 className="font-title font-semibold text-2xl mb-3 relative z-10 text-primary">Interface Intuitive</h3>
+              <p className="font-body text-textMuted text-sm mb-8 relative z-10">Suivez votre vecteur avec une précision télémétrique absolue.</p>
+              <div className="flex-1 bg-slate-900 rounded-2xl p-6 font-data text-xs text-slate-400 border border-black/5 relative shadow-inner overflow-hidden flex flex-col justify-end">
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-ping-slow"></span>
+                  <span className="w-2 h-2 rounded-full bg-accent absolute"></span>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Live</span>
+                </div>
+                <div className="flex flex-col gap-3 font-mono">
+                  <p className="text-emerald-400 opacity-70">{'>'} SYS.INIT_TRACKING</p>
+                  <p className="text-slate-300">{'>'} LOCATING_VECTOR...</p>
+                  <p className="text-slate-300">{'>'} VECTOR_ASSIGNED: T-045</p>
+                  <p className="text-blue-400 flex items-center">{'>'} CALC_ETA: 14 MIN<span className="w-2 h-4 bg-blue-400 ml-2 animate-pulse"></span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Carte 3 */}
+            <div className="glass-panel rounded-[2rem] p-8 flex flex-col h-[450px] relative overflow-hidden group">
+              <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 -translate-x-1/2 group-hover:bg-primary/10 transition-colors duration-500"></div>
+              <h3 className="font-title font-semibold text-2xl mb-3 relative z-10 text-primary">Sécurité Inégalée</h3>
+              <p className="font-body text-textMuted text-sm mb-8 relative z-10">Protocole de transfert sécurisé et garantie de bout en bout.</p>
+              <div className="flex-1 relative flex items-center justify-center">
+                 <div className="w-32 h-32 relative flex items-center justify-center">
+                    <ShieldCheck size={64} className="text-accent relative z-10" />
+                    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="1" />
+                      <circle cx="50" cy="50" r="48" fill="none" stroke="#1E3A8A" strokeWidth="2" strokeDasharray="301" strokeDashoffset="301" className="group-hover:[stroke-dashoffset:0] transition-all duration-1000 ease-out" />
+                    </svg>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+
+    const MapSection = () => {
+      const mapRef = useRef(null);
+      useEffect(() => {
+        const ctx = gsap.context(() => {
+          gsap.from(".map-pin", {
+            scrollTrigger: { trigger: mapRef.current, start: "top 70%" },
+            y: -20, opacity: 0, stagger: 0.2, ease: "bounce.out", duration: 1
+          });
+        }, mapRef);
+        return () => ctx.revert();
+      }, []);
+
+      return (
+        <section id="map" ref={mapRef} className="py-24 px-6 md:px-16 bg-background">
+          <div className="max-w-7xl mx-auto">
+            <div className="glass-panel rounded-[3rem] overflow-hidden relative h-[500px] md:h-[600px] border border-black/5 flex items-center justify-center flex-col shadow-xl shadow-primary/5">
+              {/* Fake Map Aesthetic Background */}
+              <div className="absolute inset-0 opacity-40" style={{
+                backgroundImage: 'radial-gradient(circle at center, rgba(30, 58, 138, 0.05) 0%, transparent 70%), linear-gradient(rgba(30, 58, 138, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 58, 138, 0.05) 1px, transparent 1px)',
+                backgroundSize: '100% 100%, 40px 40px, 40px 40px',
+                backgroundPosition: 'center, center, center'
+              }}></div>
+              
+              {/* Radar Scanner */}
+              <div className="absolute w-[400px] h-[400px] md:w-[600px] md:h-[600px] border border-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-[70%] h-[70%] border border-primary/5 rounded-full"></div>
+                <div className="w-[40%] h-[40%] border border-primary/5 rounded-full absolute"></div>
+                <div className="radar-sweep absolute inset-0"></div>
+              </div>
+
+              {/* Map Pins */}
+              <div className="absolute top-[30%] left-[40%] text-accent map-pin">
+                <MapPin size={32} />
+                <div className="absolute w-4 h-4 bg-accent/40 rounded-full animate-ping-slow top-2 left-2 -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+              <div className="absolute top-[60%] left-[65%] text-primary map-pin">
+                <MapPin size={24} />
+              </div>
+              <div className="absolute top-[45%] left-[25%] text-primary map-pin">
+                <MapPin size={24} />
+              </div>
+
+              <div className="relative z-10 text-center flex flex-col items-center pointer-events-none px-4">
+                <h2 className="font-title font-bold text-3xl md:text-5xl text-primary mb-4 drop-shadow-sm">Couverture Totale</h2>
+                <p className="font-body text-textMuted max-w-md bg-white/80 backdrop-blur px-6 py-3 rounded-full border border-black/5 shadow-sm">
+                  Nos vecteurs quadrillent la zone 24/7.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const Protocol = () => (
+      <section id="protocol" className="py-32 px-6 md:px-16 bg-background">
+        <div className="max-w-3xl mx-auto flex flex-col gap-16">
+          <div className="text-center mb-10">
+            <h2 className="font-title font-bold text-4xl md:text-5xl mb-4 text-primary">Le Protocole</h2>
+            <p className="font-data text-accent tracking-widest text-sm font-bold">COMMENT ÇA MARCHE</p>
+          </div>
+          <div className="sticky top-32 glass-panel rounded-[2rem] p-8 md:p-12 shadow-xl shadow-primary/5 flex flex-col gap-3">
+            <div className="font-data text-accent text-xs font-bold tracking-widest">ÉTAPE_01</div>
+            <h3 className="font-title text-2xl md:text-3xl font-bold text-primary">La Requête</h3>
+            <p className="font-body text-textMuted text-base md:text-lg">Demandez un devis. L'algorithme calcule instantanément le vecteur le plus rapide pour votre colis.</p>
+          </div>
+          <div className="sticky top-40 bg-primary text-white rounded-[2rem] p-8 md:p-12 shadow-2xl shadow-primary/20 flex flex-col gap-3 border border-white/10">
+            <div className="font-data text-accent text-xs font-bold tracking-widest">ÉTAPE_02</div>
+            <h3 className="font-title text-2xl md:text-3xl font-bold text-white">Le Transit</h3>
+            <p className="font-body text-white/80 text-base md:text-lg">Le colis entre dans le réseau. Suivez sa progression en temps réel avec une télémétrie précise.</p>
+          </div>
+          <div className="sticky top-48 bg-accent text-white rounded-[2rem] p-8 md:p-12 shadow-2xl flex flex-col gap-3 border border-white/10">
+            <div className="font-data text-white/70 text-xs font-bold tracking-widest">ÉTAPE_03</div>
+            <h3 className="font-title text-2xl md:text-3xl font-bold text-white">La Terminaison</h3>
+            <p className="font-body text-white/90 text-base md:text-lg">Livraison effectuée et confirmée électroniquement. Fluidité totale.</p>
+          </div>
+        </div>
+      </section>
+    );
+
+    const Footer = () => (
+      <footer className="bg-gray-100 border-t border-gray-200 pt-20 pb-10 px-8 md:px-16 relative z-20 mt-20">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
+          <div className="flex flex-col gap-4 max-w-sm">
+            <div className="font-title font-bold text-3xl tracking-tight text-primary">TERANGA <span className="text-accent font-light">EXPRESS</span></div>
+            <p className="font-dramatic italic text-2xl text-textMuted">La logistique élevée au rang d'art numérique.</p>
+          </div>
+          <div className="flex gap-16 font-title text-sm font-medium">
+            <div className="flex flex-col gap-4 text-textMuted">
+              <a href="#" className="interactive-link hover:text-primary">Accueil</a>
+              <a href="#features" className="interactive-link hover:text-primary">Technologies</a>
+              <a href="#protocol" className="interactive-link hover:text-primary">Protocole</a>
+            </div>
+            <div className="flex flex-col gap-4 text-textMuted">
+              <a href="#" className="interactive-link hover:text-primary">Mentions Légales</a>
+              <a href="#" className="interactive-link hover:text-primary">Confidentialité</a>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center border-t border-gray-200 pt-8 text-xs font-data text-textMuted">
+          <div>© 2026 Teranga Express. Dakar, SN.</div>
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full mt-4 md:mt-0 border border-black/5 shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-accent animate-ping-slow relative">
+              <div className="absolute inset-0 rounded-full bg-accent animate-none"></div>
+            </div>
+            <span className="tracking-widest font-bold">RÉSEAU OPÉRATIONNEL</span>
+          </div>
+        </div>
+      </footer>
+    );
+
+    const App = () => {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+
+      return (
+        <div className="w-full relative">
+          <Navbar onOpenModal={() => setIsModalOpen(true)} />
+          <main>
+            <Hero onOpenModal={() => setIsModalOpen(true)} />
+            <Features />
+            <MapSection />
+            <Protocol />
+          </main>
+          <Footer />
+          <QuoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-dark font-body m-0 p-0 overflow-x-hidden;
+  }
+}
+
+/* Texture Visuelle : Overlay de bruit CSS */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.05;
+  filter: url(#noiseFilter);
+}
+
+/* Micro-Interactions */
+.magnetic-btn {
+  @apply relative overflow-hidden transition-transform duration-500 hover:scale-105;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.magnetic-btn > .bg-layer {
+  @apply absolute inset-0 bg-dark opacity-0 transition-opacity duration-300 pointer-events-none;
+}
+
+.magnetic-btn:hover > .bg-layer {
+  @apply opacity-10;
+}
+
+.interactive-link {
+  @apply inline-block transition-transform duration-300 hover:-translate-y-px;
+}
