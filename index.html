@@ -257,11 +257,11 @@
           {/* Colonne Texte (Gauche) */}
           <div className="relative z-10 w-full md:w-[55%] flex flex-col justify-center px-6 md:pl-16 lg:pl-24 pb-24 pt-12 md:py-32">
             <div className="max-w-xl">
-              <h1 className="flex flex-col gap-2">
+              <h1 className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
                 <span ref={el => textRefs.current[0] = el} className="font-title font-bold text-3xl md:text-5xl tracking-tight text-primary">
                   La logistique n'est plus une attente.
                 </span>
-                <span ref={el => textRefs.current[1] = el} className="font-dramatic italic text-6xl md:text-[7rem] lg:text-[8rem] leading-none text-accent drop-shadow-sm">
+                <span ref={el => textRefs.current[1] = el} className="font-dramatic italic text-4xl md:text-6xl lg:text-7xl leading-none text-accent drop-shadow-sm">
                   C'est un flux.
                 </span>
               </h1>
