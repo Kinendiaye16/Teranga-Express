@@ -155,15 +155,17 @@
       }, []);
 
       return (
-        <nav ref={navRef} className="fixed top-6 left-1/2 -translate-x-1/2 z-40 px-6 py-3 rounded-full border border-transparent transition-all duration-300 flex items-center justify-between gap-12 w-[90%] max-w-5xl">
-          <div className="font-title font-bold text-xl md:text-2xl tracking-tight text-primary">TERANGA <span className="text-accent font-light">EXPRESS</span></div>
+        <nav ref={navRef} className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-40 px-4 md:px-6 py-3 rounded-full border border-transparent transition-all duration-300 flex items-center justify-between gap-2 md:gap-12 w-[95%] md:w-[90%] max-w-5xl">
+          <div className="font-title font-bold text-[1.15rem] md:text-2xl tracking-tight text-primary whitespace-nowrap">TERANGA <span className="text-accent font-light">EXPRESS</span></div>
           <div className="hidden md:flex items-center gap-8 font-title text-sm font-medium text-textMuted">
             <a href="#features" className="interactive-link hover:text-primary">Technologies</a>
             <a href="#map" className="interactive-link hover:text-primary">Couverture</a>
             <a href="#protocol" className="interactive-link hover:text-primary">Protocole</a>
           </div>
-          <button onClick={onOpenModal} className="magnetic-btn bg-accent text-white px-5 py-2 md:px-6 md:py-2.5 rounded-full font-title text-sm font-bold flex items-center gap-2 whitespace-nowrap">
-            <span>Demander un devis</span><div className="bg-layer"></div>
+          <button onClick={onOpenModal} className="magnetic-btn bg-accent text-white px-4 py-2 md:px-6 md:py-2.5 rounded-full font-title text-xs md:text-sm font-bold flex items-center gap-2 whitespace-nowrap">
+            <span className="md:hidden">Devis</span>
+            <span className="hidden md:inline">Demander un devis</span>
+            <div className="bg-layer"></div>
           </button>
         </nav>
       );
@@ -252,7 +254,7 @@
       }, []);
 
       return (
-        <section ref={containerRef} className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col-reverse md:flex-row bg-background pt-20 md:pt-0">
+        <section ref={containerRef} className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col-reverse md:flex-row bg-background pt-28 md:pt-0">
           
           {/* Colonne Texte (Gauche) */}
           <div className="relative z-10 w-full md:w-[55%] flex flex-col justify-center px-6 md:pl-16 lg:pl-24 pb-24 pt-12 md:py-32">

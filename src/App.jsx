@@ -25,14 +25,14 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav ref={navRef} className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full border border-transparent transition-colors duration-300 flex items-center gap-12 text-[#F2F0E9]">
-      <div className="font-title font-bold text-xl tracking-tight">LivrExpress</div>
+    <nav ref={navRef} className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] md:w-auto max-w-[400px] md:max-w-none px-5 md:px-6 py-3 rounded-full border border-transparent transition-colors duration-300 flex items-center justify-between md:justify-center gap-4 md:gap-12 text-[#F2F0E9]">
+      <div className="font-title font-bold text-xl md:text-xl tracking-tight">Teranga Express</div>
       <div className="hidden md:flex items-center gap-8 font-title text-sm font-medium">
         <a href="#features" className="interactive-link">Fonctionnalités</a>
         <a href="#manifesto" className="interactive-link">Manifeste</a>
         <a href="#protocol" className="interactive-link">Protocole</a>
       </div>
-      <button className="magnetic-btn bg-accent text-background px-5 py-2 rounded-full font-title text-sm font-semibold flex items-center gap-2">
+      <button className="magnetic-btn bg-accent text-background px-4 md:px-5 py-2 rounded-full font-title text-sm font-semibold flex items-center gap-2">
         <span>Rejoindre</span>
         <div className="bg-layer"></div>
       </button>
@@ -59,27 +59,27 @@ const Hero = () => {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden flex items-end pb-24 px-8 md:px-16">
+    <section ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden flex flex-col justify-start md:justify-end pt-32 md:pt-0 pb-12 md:pb-24 px-6 md:px-16">
       <div className="absolute inset-0 z-0">
         <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=2000&auto=format&fit=crop" alt="Dark Forest" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-t from-dark/80 md:from-dark via-dark/40 md:via-dark/60 to-dark/90 md:to-transparent"></div>
       </div>
       
       <div className="relative z-10 w-full max-w-5xl">
         <h1 className="flex flex-col gap-2 text-background">
           <span ref={el => textRefs.current[0] = el} className="font-title font-semibold text-2xl md:text-4xl tracking-tight text-background/80">
-            LivrExpress est la
+            Teranga Express est la
           </span>
-          <span ref={el => textRefs.current[1] = el} className="font-dramatic italic text-7xl md:text-[9rem] leading-none text-background">
+          <span ref={el => textRefs.current[1] = el} className="font-dramatic italic text-6xl md:text-[9rem] leading-none text-background">
             Vitesse.
           </span>
         </h1>
-        <p ref={el => textRefs.current[2] = el} className="mt-8 text-lg md:text-xl font-body max-w-md text-background/70">
+        <p ref={el => textRefs.current[2] = el} className="mt-6 md:mt-8 text-base md:text-xl font-body max-w-md text-background/80">
           Livraison rapide de colis en 2 heures à Dakar. Le protocole organique de la logistique moderne.
         </p>
-        <div ref={el => textRefs.current[3] = el} className="mt-10">
-          <button className="magnetic-btn bg-accent text-background px-8 py-4 rounded-full font-title text-base font-semibold flex items-center gap-3">
-            <span>Rejoindre la liste d'attente</span>
+        <div ref={el => textRefs.current[3] = el} className="mt-8 md:mt-10 w-full md:w-auto">
+          <button className="magnetic-btn bg-accent text-background px-6 py-3 md:px-8 md:py-4 rounded-full font-title text-sm md:text-base font-semibold flex items-center justify-center gap-3 w-full md:w-auto">
+            <span>Demander un devis</span>
             <ArrowRight size={20} />
             <div className="bg-layer"></div>
           </button>
@@ -221,7 +221,7 @@ const Footer = () => {
     <footer className="bg-dark text-background pt-24 pb-12 px-8 md:px-16 rounded-t-[4rem] relative z-20">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-16 mb-24">
         <div className="flex flex-col gap-6">
-          <div className="font-title font-bold text-3xl">LivrExpress</div>
+          <div className="font-title font-bold text-3xl">Teranga Express</div>
           <p className="font-dramatic italic text-2xl text-background/70 max-w-sm">La précision organique de la livraison.</p>
         </div>
         <div className="flex gap-16 font-title text-sm font-medium">
@@ -237,7 +237,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center border-t border-background/10 pt-8 text-sm font-data text-background/40">
-        <div>© 2026 LivrExpress. Dakar, SN.</div>
+        <div>© 2026 Teranga Express. Dakar, SN.</div>
         <div className="flex items-center gap-3 bg-background/5 px-4 py-2 rounded-full">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <span>SYSTÈME OPÉRATIONNEL</span>
